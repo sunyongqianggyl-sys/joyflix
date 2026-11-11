@@ -92,18 +92,29 @@ function HomeClient() {
       try {
         setLoading(true);
 
-        // 并行获取热门电影、热门剧集和热门综艺
-        const [moviesData, tvShowsData, varietyShowsData, bangumiCalendarData] =
-          await Promise.all([
-            getDoubanCategories({
-              kind: 'movie',
-              category: '热门',
-              type: '全部',
-            }),
-            getDoubanCategories({ kind: 'tv', category: 'tv', type: 'tv' }),
-            getDoubanCategories({ kind: 'tv', category: 'show', type: 'show' }),
-            GetBangumiCalendarData(),
-          ]);
+        // 首页所需数据一次性并行请求，避免自定义分类串行等待拖慢首屏完成
+        const [
+          moviesData,
+          tvShowsData,
+          varietyShowsData,
+          bangumiCalendarData,
+          customCategoryData,
+        ] = await Promise.all([
+          getDoubanCategories({
+            kind: 'movie',
+            category: '热门',
+            type: '全部',
+          }),
+          getDoubanCategories({ kind: 'tv', category: 'tv', type: 'tv' }),
+          getDoubanCategories({ kind: 'tv', category: 'show', type: 'show' }),
+          GetBangumiCalendarData(),
+          getDoubanList({
+            tag: '华语',
+            type: 'movie',
+            pageLimit: 25,
+            pageStart: 0,
+          }),
+        ]);
 
         if (moviesData.code === 200) {
           setHotMovies(moviesData.list);
@@ -118,13 +129,6 @@ function HomeClient() {
         }
         setBangumiCalendarData(bangumiCalendarData);
 
-        // 获取自定义分类数据：电影 - 华语
-        const customCategoryData = await getDoubanList({
-          tag: '华语',
-          type: 'movie',
-          pageLimit: 25,
-          pageStart: 0,
-        });
         if (customCategoryData.code === 200) {
           setHotCustomCategory(customCategoryData.list);
         }
