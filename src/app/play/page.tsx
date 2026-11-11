@@ -1900,13 +1900,14 @@ function PlayPageClient() {
             const hls = new Hls({
               debug: false, // 关闭日志
               enableWorker: true, // WebWorker 解码，降低主线程压力
-              lowLatencyMode: true, // 开启低延迟 LL-HLS
+              // 本项目主要播放点播内容，不启用 LL-HLS，避免不必要的低延迟调度
+              lowLatencyMode: false,
 
-              /* 缓冲/内存相关 - 极致流畅版 */
-              maxBufferLength: 80, // 前向缓冲最大 80s，过大容易导致高延迟
-              maxMaxBufferLength: 200, // 设置一个安全的最大上限，防止意外的缓冲裁剪
-              backBufferLength: 40, // 仅保留 40s 已播放内容，避免内存占用
-              maxBufferSize: 500 * 1000 * 1000, // 约 500MB，超出后触发清理
+              // 适中缓冲：减少移动端内存占用，并为网络波动保留缓冲余量
+              maxBufferLength: 30,
+              maxMaxBufferLength: 60,
+              backBufferLength: 30,
+              maxBufferSize: 60 * 1000 * 1000, // 约 60MB
 
               /* 自定义loader */
               loader: blockAdEnabledRef.current
